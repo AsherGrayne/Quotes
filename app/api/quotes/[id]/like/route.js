@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Quote from '@/models/Quote';
+import Like from '@/models/Like';
 
 export async function POST(request, { params }) {
   try {
@@ -18,18 +19,25 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
-    const likeIndex = quote.likes.indexOf(username);
-    if (likeIndex > -1) {
+    // Process using Like collection
+    const existingLike = await Like.findOne({ quoteId: id, username });
+
+    if (existingLike) {
       // User already liked it, so unlike
-      quote.likes.splice(likeIndex, 1);
+      await Like.deleteOne({ _id: existingLike._id });
+      
+      // Also clean up from old quote.likes if it exists
+      const likeIndex = quote.likes.indexOf(username);
+      if (likeIndex > -1) {
+        quote.likes.splice(likeIndex, 1);
+        await quote.save();
+      }
     } else {
       // Add like
-      quote.likes.push(username);
+      await Like.create({ quoteId: id, username });
     }
 
-    await quote.save();
-
-    return NextResponse.json(quote, { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
     return NextResponse.json({ error: 'Failed to update like' }, { status: 500 });
   }

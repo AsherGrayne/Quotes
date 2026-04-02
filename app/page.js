@@ -160,8 +160,12 @@ export default function Home() {
                     className={`like-button ${hasLiked ? 'liked' : ''}`}
                     onClick={() => handleLike(quote._id)}
                     aria-label="Like quote"
+                    style={{ gap: '0.4rem' }}
                   >
                     <Heart className="heart-icon" />
+                    <span style={{ fontSize: '0.95rem', fontWeight: '500', color: hasLiked ? 'var(--pink-heart)' : 'var(--text-secondary)' }}>
+                      {quote.likes ? quote.likes.length : 0}
+                    </span>
                   </button>
                 </div>
 
